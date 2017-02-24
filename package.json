@@ -1,0 +1,12 @@
+{
+  "name": "holdsport",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "@types/request": "^0.0.40",
+    "moment": "^2.17.1",
+    "request": "^2.79.0"
+  }
+}
