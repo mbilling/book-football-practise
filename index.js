@@ -1,12 +1,13 @@
 "use strict";
-var request = require('request');
-var moment = require('moment');
+Object.defineProperty(exports, "__esModule", { value: true });
+var request = require("request");
+var moment = require("moment");
 var username = 'busterfb';
 var password = 'cb292lmo';
 var baseUrl = "http://" + username + ":" + password + "@api.holdsport.dk";
 var userId = 482185; // buster
 var targetDay = 'tuesday';
-var targetTime = '05:00';
+var targetTime = '05:00'; // Activity time we want to book
 var checkInterval = 1;
 var dayBookingOpens = 1; // sunday = 0
 var jobDoneThisWeek = false;
@@ -41,9 +42,25 @@ var Post = function (options) {
         });
     });
 };
+var Put = function (options) {
+    options['method'] = 'PUT';
+    options['headers'] = {
+        'Content-Type': 'application/json'
+    };
+    return new Promise(function (resolve, reject) {
+        request.put(options, function (err, response, body) {
+            if (err) {
+                reject(err);
+            }
+            else {
+                resolve(body, response);
+            }
+        });
+    });
+};
 var checkDay = function () {
     var nextCheckDate = moment().add(1, 'w');
-    nextCheckDate.hour(0).minute(1).second(0);
+    nextCheckDate.hour(0).minute(30).second(0);
     var nextRun = moment.duration(nextCheckDate.diff(moment()), 'milliseconds');
     var now = moment();
     if (now.day() == dayBookingOpens) {
@@ -94,7 +111,8 @@ var investigateActivity = function (activity) {
                 if (moment(activity.starttime).format('hh:mm') == targetTime && action.activities_user && action.activities_user.name.toLowerCase() == 'tilmeld') {
                     // tilmeld os hvis det er den tidligere træning tirsdag :)
                     signedActivities++;
-                    signupActivity(activity.action_path, action).then(function (result, response) {
+                    delete action.activities_user.name;
+                    signupActivity(activity.action_path, JSON.stringify(action)).then(function (result, response) {
                         if (response.status == 201)
                             console.log(JSON.stringify(activity.name) + " @ " + startMoment + " blev booket");
                         else
@@ -113,6 +131,6 @@ var investigateActivity = function (activity) {
     };
 };
 var signupActivity = function (path, action) {
-    return Post({ url: "" + baseUrl + path, body: action });
+    return Put({ url: "" + baseUrl + path, body: action });
 };
 //# sourceMappingURL=index.js.map

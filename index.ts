@@ -9,7 +9,7 @@ let baseUrl = `http://${username}:${password}@api.holdsport.dk`;
 
 let userId = 482185; // buster
 let targetDay = 'tuesday';
-let targetTime = '05:00';
+let targetTime = '05:00';       // Activity time we want to book
 let checkInterval = 1;
 let dayBookingOpens = 1;        // sunday = 0
 let jobDoneThisWeek = false;
@@ -45,11 +45,27 @@ let Post = (options) => {
     });
 }
 
+let Put = (options) => {
+    options['method'] = 'PUT';
+    options['headers'] = {
+        'Content-Type': 'application/json'
+    }
+    return new Promise((resolve, reject) => {
+        request.put(options, (err, response, body) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(body, response);
+            }
+        })
+    });
+}
+
 
 let checkDay = () => {
 
     let nextCheckDate = moment().add(1, 'w');
-    nextCheckDate.hour(0).minute(1).second(0);
+    nextCheckDate.hour(0).minute(30).second(0);
     let nextRun = moment.duration(nextCheckDate.diff(moment()), 'milliseconds');
     let now = moment();
     if (now.day() == dayBookingOpens) {    // 1 = monday
@@ -106,7 +122,8 @@ let investigateActivity = (activity) => {
                 if (moment(activity.starttime).format('hh:mm') == targetTime && action.activities_user && action.activities_user.name.toLowerCase() == 'tilmeld') {
                     // tilmeld os hvis det er den tidligere træning tirsdag :)
                     signedActivities++;
-                    signupActivity(activity.action_path, action).then((result, response) => {
+                    delete action.activities_user.name;
+                    signupActivity(activity.action_path, JSON.stringify(action)).then((result, response) => {
                         if(response.status == 201)
                             console.log(`${JSON.stringify(activity.name)} @ ${startMoment} blev booket`);
                         else
@@ -127,6 +144,6 @@ let investigateActivity = (activity) => {
 
 let signupActivity = (path, action) => {
 
-    return Post({ url: `${baseUrl}${path}`, body: action });
+    return Put({ url: `${baseUrl}${path}`, body: action });
 }
 
